@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordDumper: Music Theory Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        /* Base Chord SVG Sizing */
+        .chord-svg-container svg {
+            width: 100%;
+            height: auto;
+            max-width: 180px;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        /* Full Neck Scale Sizing (Page Width) */
+        .scale-full-container svg {
+            width: 100%;
+            height: auto;
+            max-width: 1050px; /* Spans landscape width */
+            display: block;
+            margin: 0 auto;
+        }
+
+        .chord-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .chord-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0.25in;
+            }
+            .no-print { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
+            .print-container { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+            
+            .chord-grid {
+                display: grid !important;
+                grid-template-columns: repeat(6, 1fr) !important;
+                gap: 5px !important;
+            }
+            .chord-card {
+                border: 1px solid #f5f5f5 !important;
+                padding: 15px 5px !important; /* Reduced X, Increased Y padding */
+                margin: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-12 print-container">
+        <header class="text-center mb-12 no-print">
+            <h1 class="text-5xl font-extrabold tracking-tight text-slate-800 mb-4">ChordDumper Suite</h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                Generate positional guitar theory workbooks. Enter a progression and choose your fretboard starting point.
+            </p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 mb-12 max-w-3xl mx-auto no-print">
+            <form 
+                hx-post="/generate" 
+                hx-target="#workbook-results" 
+                hx-indicator="#loading-spinner"
+                class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end"
+            >
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Chord Progression</label>
+                    <input 
+                        type="text" 
+                        name="progression" 
+                        value="C Am F G"
+                        placeholder="e.g., C Am F G"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Start Fret</label>
+                    <input 
+                        type="number" 
+                        name="start_fret" 
+                        value="1" 
+                        min="1" 
+                        max="15"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                    >
+                </div>
+                <div>
+                    <button 
+                        type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg shadow-blue-200 transition-all transform active:scale-95"
+                    >
+                        Generate
+                    </button>
+                </div>
+            </form>
+
+            <!-- Loading Spinner -->
+            <div id="loading-spinner" class="htmx-indicator mt-4 text-center text-blue-500 flex items-center justify-center space-x-2">
+                <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm font-medium">Analyzing theory...</span>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div id="workbook-results" class="min-h-[400px]">
+            <div class="text-center py-20 text-slate-400">
+                <p class="italic">Your theory workbook will appear here.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
