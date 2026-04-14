@@ -1,62 +1,54 @@
-# ChordDumper Project Specifications
+# Scale + Chord Progression: Project Specifications
 
 ## Overview
-ChordDumper is a Python-based utility designed to transform music theory data (chords, scales, and progressions) stored in Excel spreadsheets into visual aids. It currently generates SVG diagrams and HTML reports intended for browser-based printing to PDF.
+A Flask-based "Positional Music Theory Suite" that mathematically generates and visualizes guitar scales, chords, and progressions. It features a "Theory Detective" for key inference and is optimized for standard 8.5x11 portrait printing.
 
-## Core Features
-- **Data Source:** Reads from `chords9.xlsx` with three mandatory tabs: `chords`, `favs` (progressions), and `scales`.
-- **Diagram Generation:** Uses `svgwrite` to create vector-based guitar chord and scale diagrams.
-- **HTML Reporting:** Aggregates diagrams into categorized HTML files (`chords.html`, `favs.html`, `scales.html`) with intelligent page-break logic for printing.
-- **Verification System:** Highlights unverified data (where `VERIFIED=0`) in pink for easy identification.
+## Core Files & Purposes
 
-## Technical Stack
-- **Language:** Python 3.12+
-- **Theory Engine:** `theory_engine.py` (Calculates scales, modes, and chord intervals mathematically)
-- **Data Handling:** `openpyxl` (Excel), `collections.OrderedDict`, `json`
-- **Graphics:** `svgwrite` (SVG generation)
-- **CLI:** `getopt`, `colorama`
-- **Output:** HTML/SVG (Web-viewable)
+### 1. `app/theory/engine.py` (The Theory Library)
+**Purpose:** The central database for musical math.
+- **Where to add "Moods":** Update the `SCALES` and `SCALE_METADATA` dictionaries.
+- **Where to add "Patterns":** Update the `PROGRESSION_PRESETS` dictionary.
+- **Chord Math:** Contains `CHORD_TYPES` and `get_chord_notes`.
+- **Key Detection:** Houses the `detect_key_and_mood` (Theory Detective) function.
 
-## Project Skills
+### 2. `app/theory/solver.py` (The Fretboard Brain)
+**Purpose:** Translates raw notes into physical (string, fret) coordinates.
+- **Playability Logic:** `get_alternative_fingerings` filters out unplayable stretches.
+- **Window Search:** `find_notes_in_window` maps scales across specific neck positions.
 
-### 1. Music Theory Solver (`theory_engine.py`)
-This component acts as the "brain" of the project. It can:
-- **Generate Scales:** Input a Root (e.g., "A") and a Mode (e.g., "Dorian") to receive a list of notes.
-- **Construct Chords:** Calculate notes for Major, Minor, 7th, Maj7, and other extensions on the fly.
-- **Fretboard Mapping:** Translate note names into (string, fret) coordinates for any position on the guitar neck.
-- **Mode Matching:** Suggest compatible scales for a given chord or progression (e.g., Am7 in G Major -> A Dorian).
+### 3. `app/graphics/svg_builder.py` (The Artist)
+**Purpose:** Generates raw SVG strings for diagrams.
+- **Visual Constants:** Define string spacing (`STRINGS_X`), fret spacing (`FRETS_Y`), and "Nut" thickness.
+- **Classes:** `FretboardDiagram` (vertical chords) and `FullNeckDiagram` (horizontal 12-fret scales).
 
-## Operational Guidelines (API & Rate Limits)
+### 4. `app/templates/index.html` (The Dashboard)
+**Purpose:** Main UI and Print Configuration.
+- **Tooltips:** Contains the floating help system for Steps 1-3 and Start Fret.
+- **Print CSS:** The `@media print` section controls the 5-across chord grid and portrait 8.5x11 layout.
+- **HTMX Logic:** Handles the live swapping of chord presets and sheet generation.
 
-### 1. Handling 429 Errors (Rate Limits)
-- **Proactive Warning:** If the agent detects a 429 error (Too Many Requests), it must immediately stop and notify the user in plain text: "⚠️ RATE LIMIT DETECTED (429) - PAUSING FOR 15-30 SECONDS."
-- **Backoff:** Wait at least 15 seconds before retrying any tool calls.
-- **Visibility:** User should set `/config set ui.errorVerbosity "full"` to see recoverable errors in the CLI.
+### 5. `app/services/workbook_service.py` (The Orchestrator)
+**Purpose:** Coordinates the pipeline between the Engine, Solver, and Artist.
+- **Data Flow:** Packages theory data and SVG strings into a `workbook` object for the templates.
 
-### 2. Context Efficiency
-- **Batching:** Always combine research (reading) and execution (writing/editing) into single turns whenever possible to preserve API quota.
-- **Session Reset:** Periodically restart the CLI session to clear the conversation history and reduce the token cost per turn.
-- **Ignore Rules:** Maintain a strict `.geminiignore` (ignoring `Scripts/`, `Lib/`, `Include/`, `__pycache__/`) to prevent wasted context scanning.
+## Expansion Guide
 
-## Proposed Enhancements
+### To add a new Scale (Mood):
+1. Open `app/theory/engine.py`.
+2. Add the interval pattern to `SCALES` (e.g., `[0, 2, 3, 5, 7, 8, 10]` for Minor).
+3. Add a user-friendly name to `SCALE_METADATA`.
 
-### 1. Application Framework
-To provide a more interactive experience, we can move from a CLI-only tool to:
-- **Flask (Recommended):** Ideal for a web-based dashboard where you can select specific scales/chords and generate a PDF on the fly. Easier to style with modern CSS.
-- **PyQt5:** Better for a standalone desktop application with a native feel.
+### To add a new Progression (Pattern):
+1. Open `app/theory/engine.py`.
+2. Add an entry to `PROGRESSION_PRESETS` with a name and the list of scale degrees (e.g., `[1, 6, 4, 5]`).
 
-### 2. PDF Generation
-Instead of relying on browser printing, we can integrate:
-- **ReportLab:** A powerful library for generating complex PDFs directly from Python.
-- **WeasyPrint:** Excellent for converting HTML/CSS (like the current output) directly into high-quality PDFs.
+### To adjust Print Layout:
+1. Open `app/templates/index.html`.
+2. Locate the `@media print` section.
+3. Adjust `width: 19%` on `.chord-card` to change the number of columns per row.
 
-### 3. Music Theory Content
-- **Scales:** Expand beyond Major/Minor to include Modes (Dorian, Phrygian, etc.), Pentatonic, and Blues scales.
-- **Chords:** Add more voicings, extensions (7ths, 9ths, 13ths), and inversions.
-- **Theory Integration:** Add text sections explaining the relationship between the chosen scales and the chords in a progression.
-
-## Planned Roadmap
-- [ ] **Phase 1:** Refactor data loading to a more robust `ChordProvider` class.
-- [ ] **Phase 2:** Implement a Flask-based UI for browsing the database.
-- [ ] **Phase 3:** Integrate `WeasyPrint` for "Export to PDF" functionality.
-- [ ] **Phase 4:** Expand `chords9.xlsx` with comprehensive theory data.
+## Architecture & Constraints
+- **Orientation:** Optimized for **Portrait** (8.5x11).
+- **Interactivity:** HTMX handles all backend calls; Base64 encoding allows instant SVG swapping in the browser.
+- **Math:** 0-indexed intervals are used throughout (0=Root, 7=Fifth).

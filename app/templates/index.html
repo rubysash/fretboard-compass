@@ -43,7 +43,7 @@
 
         @media print {
             @page {
-                size: landscape;
+                size: portrait;
                 margin: 0.25in;
             }
             .no-print { display: none !important; }
@@ -51,14 +51,21 @@
             .print-container { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
             
             .chord-grid {
-                display: grid !important;
-                grid-template-columns: repeat(6, 1fr) !important;
+                display: flex !important;
+                flex-wrap: wrap !important;
                 gap: 5px !important;
+                justify-content: center !important;
             }
             .chord-card {
-                border: 1px solid #f5f5f5 !important;
-                padding: 15px 5px !important;
-                margin: 0 !important;
+                width: 150px !important; /* Fixed width matching SVG */
+                border: 1px solid #eee !important;
+                padding: 2px !important;
+                margin: 5px !important;
+                break-inside: avoid;
+            }
+            .chord-svg-container svg {
+                max-width: 100% !important;
+                height: auto !important;
             }
         }
     </style>
@@ -72,8 +79,8 @@
 
     <div class="max-w-6xl mx-auto px-4 py-8 print-container">
         <header class="text-center mb-8 no-print">
-            <h1 class="text-4xl font-extrabold tracking-tight text-slate-800 mb-2">ChordDumper Suite</h1>
-            <p class="text-slate-600">Music Theory Discovery Engine</p>
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-800 mb-2">Scale + Chord Progression</h1>
+            <p class="text-slate-600">Music Theory Helper for Guitarists</p>
         </header>
 
         <!-- Discovery Panel -->
@@ -87,7 +94,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <!-- Key Selection -->
                     <div>
-                        <label class="block text-xs font-bold text-blue-500 uppercase mb-1 text-center italic">Step 1: Pick Note</label>
+                        <div class="flex items-center justify-center gap-1 mb-1">
+                            <label class="block text-xs font-bold text-blue-500 uppercase italic">Step 1: Pick Note</label>
+                            <div class="group relative">
+                                <span class="text-blue-300 cursor-help text-[10px] border border-blue-200 rounded-full px-1">?</span>
+                                <div class="hidden group-hover:block absolute z-50 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl left-1/2 -translate-x-1/2 bottom-full mb-2">
+                                    The anchor note for your whole sheet. This sets the starting point for the scale and chords.
+                                </div>
+                            </div>
+                        </div>
                         <select 
                             name="key_root" id="key_root" 
                             class="w-full p-3 rounded-lg border-2 border-blue-100 bg-white font-black text-xl text-center appearance-none focus:border-blue-500 outline-none transition-all"
@@ -105,7 +120,15 @@
 
                     <!-- Scale Type -->
                     <div>
-                        <label class="block text-xs font-bold text-purple-500 uppercase mb-1 text-center italic">Step 2: Pick Mood</label>
+                        <div class="flex items-center justify-center gap-1 mb-1">
+                            <label class="block text-xs font-bold text-purple-500 uppercase italic">Step 2: Pick Mood</label>
+                            <div class="group relative">
+                                <span class="text-purple-300 cursor-help text-[10px] border border-purple-200 rounded-full px-1">?</span>
+                                <div class="hidden group-hover:block absolute z-50 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl -left-20 top-6">
+                                    Sets the "flavor" of the scale. This changes the 12-fret reference diagram at the top.
+                                </div>
+                            </div>
+                        </div>
                         <select 
                             name="scale_type" id="scale_type" 
                             class="w-full p-3 rounded-lg border-2 border-purple-100 bg-white font-bold text-center appearance-none focus:border-purple-500 outline-none transition-all"
@@ -123,7 +146,15 @@
 
                     <!-- Presets -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 text-center italic">Step 3: Pick Pattern (Optional)</label>
+                        <div class="flex items-center justify-center gap-1 mb-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase italic">Step 3: Pick Pattern</label>
+                            <div class="group relative">
+                                <span class="text-slate-300 cursor-help text-[10px] border border-slate-200 rounded-full px-1">?</span>
+                                <div class="hidden group-hover:block absolute z-50 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl left-1/2 -translate-x-1/2 bottom-full mb-2">
+                                    Choose a popular chord progression to auto-fill the box below. "Manual/Solver" lets you type anything.
+                                </div>
+                            </div>
+                        </div>
                         <select 
                             name="preset" id="preset"
                             class="w-full p-3 rounded-lg border-2 border-slate-100 bg-slate-50 text-slate-700 font-bold text-center appearance-none cursor-pointer focus:border-slate-400 outline-none transition-all"
@@ -154,7 +185,15 @@
                         >
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 text-center">Start Fret</label>
+                        <div class="flex items-center justify-center gap-1 mb-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase italic">Start Fret</label>
+                            <div class="group relative">
+                                <span class="text-slate-300 cursor-help text-[10px] border border-slate-200 rounded-full px-1">?</span>
+                                <div class="hidden group-hover:block absolute z-50 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl left-1/2 -translate-x-1/2 bottom-full mb-2">
+                                    Forces the computer to find chords in this position. 1 = Open chords, 5 = Mid-neck Barre chords.
+                                </div>
+                            </div>
+                        </div>
                         <input 
                             type="number" 
                             name="start_fret" 

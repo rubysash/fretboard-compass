@@ -17,7 +17,10 @@ SCALES = {
     'phrygian': [0, 1, 3, 5, 7, 8, 10],
     'phrygian_dominant': [0, 1, 4, 5, 7, 8, 10], 
     'harmonic_minor': [0, 2, 3, 5, 7, 8, 11],
+    'melodic_minor': [0, 2, 3, 5, 7, 9, 11],
+    'double_harmonic': [0, 1, 4, 5, 7, 8, 11], # Arabic/Byzantine
     'lydian': [0, 2, 4, 6, 7, 9, 11],
+    'lydian_dominant': [0, 2, 4, 6, 7, 9, 10], # Overtone scale
     'mixolydian': [0, 2, 4, 5, 7, 9, 10],
     'locrian': [0, 1, 3, 5, 6, 8, 10],
     'pentatonic_major': [0, 2, 4, 7, 9],
@@ -32,7 +35,10 @@ SCALE_METADATA = {
     'phrygian': 'Standard Spanish (Phrygian)',
     'phrygian_dominant': 'Spanish Gypsy (Phrygian Dom)',
     'harmonic_minor': 'Classical Spanish (Harmonic)',
+    'melodic_minor': 'Jazz Minor (Melodic)',
+    'double_harmonic': 'Arabic / Byzantine',
     'lydian': 'Dreamy / Spacey (Lydian)',
+    'lydian_dominant': 'Simpsons / Jazz (Lydian Dom)',
     'mixolydian': 'Bluesy / Rock (Mixolydian)',
     'locrian': 'Dark / Tense (Locrian)',
     'pentatonic_major': 'Major Pentatonic',
@@ -42,10 +48,13 @@ SCALE_METADATA = {
 
 PROGRESSION_PRESETS = {
     'pop_rock': {'name': 'I - V - vi - IV (Pop/Rock)', 'degrees': [1, 5, 6, 4]},
-    'jazz_ii_v_i': {'name': 'ii - V - I (Standard Jazz)', 'degrees': [2, 5, 1]},
+    'pop_classic': {'name': 'I - vi - IV - V (50s Pop)', 'degrees': [1, 6, 4, 5]},
+    'jazz_ii_v_i': {'name': 'ii - V - I (Major Jazz)', 'degrees': [2, 5, 1]},
+    'jazz_ii_v_i_minor': {'name': 'ii - V - i (Minor Jazz)', 'degrees': [2, 5, 1]},
     'blues_12_bar': {'name': 'I - IV - V (12-Bar Blues)', 'degrees': [1, 4, 1, 5, 4, 1]},
     'minor_blues': {'name': 'i - iv - v (Minor Blues)', 'degrees': [1, 4, 5]},
     'flamenco': {'name': 'i - VII - VI - V (Spanish/Flamenco)', 'degrees': [1, 7, 6, 5]},
+    'circle': {'name': 'Circle of 5ths (I-V-II-VI-III)', 'degrees': [1, 5, 2, 6, 3]},
 }
 
 CHORD_TYPES = {
@@ -73,41 +82,29 @@ def get_notes_in_scale(root: str, scale_type: str) -> List[str]:
     return [NOTES[(start_idx + i) % 12] for i in pattern]
 
 def detect_key_and_mood(progression: List[str]) -> Tuple[str, str]:
-    """The 'Theory Detective': Analyzes chords to find the best matching Root and Scale."""
     if not progression: return 'C', 'major'
-    
-    # 1. Harvest all notes used in the progression
     all_used_notes = set()
     for chord in progression:
         root = chord[:2] if len(chord) > 1 and chord[1] in ['#', 'b'] else chord[0]
         suffix = chord[len(root):].lower()
         c_type = 'minor' if 'm' in suffix else 'major'
         all_used_notes.update(get_chord_notes(root, c_type))
-    
     best_root, best_scale, highest_score = 'C', 'major', -1
-    
-    # 2. Score against every possibility
     for root in NOTES:
         for s_type in SCALES.keys():
             scale_notes = set(get_notes_in_scale(root, s_type))
-            # Match score: how many of our notes are in this scale?
             score = len(all_used_notes.intersection(scale_notes))
-            
-            # Bonus: Does the first chord match the root?
-            first_chord_root = progression[0][:2] if len(progression[0]) > 1 and progression[0][1] in ['#', 'b'] else progression[0][0]
-            if normalize_note(first_chord_root) == root:
-                score += 1.5 # Heavy weight on the first chord
-                
+            first_root = progression[0][:2] if len(progression[0]) > 1 and progression[0][1] in ['#', 'b'] else progression[0][0]
+            if normalize_note(first_root) == root: score += 1.5
             if score > highest_score:
                 highest_score = score
                 best_root, best_scale = root, s_type
-                
     return best_root, best_scale
 
 def get_chord_from_degree(key_root: str, key_type: str, degree: int) -> str:
     key_root = normalize_note(key_root)
     root_idx = NOTES.index(key_root)
-    if 'phrygian' in key_type or 'harmonic' in key_type:
+    if 'phrygian' in key_type or 'harmonic' in key_type or 'double' in key_type:
         scale_map = {1: (0, 'm'), 7: (10, ''), 6: (8, ''), 5: (7, '')}
     elif key_type == 'blues':
         scale_map = {1: (0, '7'), 4: (5, '7'), 5: (7, '7')}
@@ -115,7 +112,6 @@ def get_chord_from_degree(key_root: str, key_type: str, degree: int) -> str:
         scale_map = {1: (0, 'm'), 2: (2, 'dim'), 3: (3, ''), 4: (5, 'm'), 5: (7, 'm'), 6: (8, ''), 7: (10, '')}
     else:
         scale_map = {1: (0, ''), 2: (2, 'm'), 3: (4, 'm'), 4: (5, ''), 5: (7, ''), 6: (9, 'm'), 7: (11, 'dim')}
-    
     if degree not in scale_map: return key_root
     interval, suffix = scale_map[degree]
     chord_root = NOTES[(root_idx + interval) % 12]
@@ -137,7 +133,8 @@ def get_nashville_number(key_root: str, key_type: str, chord_name: str) -> str:
     cr = normalize_note(chord_name[:2] if len(chord_name) > 1 and chord_name[1] in ['#', 'b'] else chord_name[0])
     if cr not in sn: return "?"
     idx = sn.index(cr)
-    return ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'][idx] if 'minor' in key_type or 'phrygian' in key_type or 'harmonic' in key_type else ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'][idx]
+    is_m = 'minor' in key_type or 'phrygian' in key_type or 'harmonic' in key_type or 'double' in key_type
+    return ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'][idx] if is_m else ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'][idx]
 
 def get_note_at_fret(open_note: str, fret: int) -> str:
     return NOTES[(NOTES.index(open_note.upper()) + fret) % 12]
