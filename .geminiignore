@@ -1,0 +1,19 @@
+# For the most part, .geminiignore follows the conventions of .gitignore files:
+#    Blank lines and lines starting with # are ignored.
+#    Standard glob patterns are supported (such as *, ?, and []).
+#    Putting a / at the end will only match directories.
+#    Putting a / at the beginning anchors the path relative to the .geminiignore file.
+#    ! negates a pattern.
+
+
+chorddump.9.py
+9/*
+archive/*
+requirements.txt
+Scripts/
+Lib/
+Include/
+pyvenv.cfg
+*.xlsx
+*.pyc
+__pycache__/

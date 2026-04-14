@@ -26,6 +26,18 @@ This component acts as the "brain" of the project. It can:
 - **Fretboard Mapping:** Translate note names into (string, fret) coordinates for any position on the guitar neck.
 - **Mode Matching:** Suggest compatible scales for a given chord or progression (e.g., Am7 in G Major -> A Dorian).
 
+## Operational Guidelines (API & Rate Limits)
+
+### 1. Handling 429 Errors (Rate Limits)
+- **Proactive Warning:** If the agent detects a 429 error (Too Many Requests), it must immediately stop and notify the user in plain text: "⚠️ RATE LIMIT DETECTED (429) - PAUSING FOR 15-30 SECONDS."
+- **Backoff:** Wait at least 15 seconds before retrying any tool calls.
+- **Visibility:** User should set `/config set ui.errorVerbosity "full"` to see recoverable errors in the CLI.
+
+### 2. Context Efficiency
+- **Batching:** Always combine research (reading) and execution (writing/editing) into single turns whenever possible to preserve API quota.
+- **Session Reset:** Periodically restart the CLI session to clear the conversation history and reduce the token cost per turn.
+- **Ignore Rules:** Maintain a strict `.geminiignore` (ignoring `Scripts/`, `Lib/`, `Include/`, `__pycache__/`) to prevent wasted context scanning.
+
 ## Proposed Enhancements
 
 ### 1. Application Framework

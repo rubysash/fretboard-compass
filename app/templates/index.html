@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>ChordDumper: Music Theory Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10?v={{ range(1, 1000) | random }}"></script>
     <style>
         /* Base Chord SVG Sizing */
         .chord-svg-container svg {
@@ -20,7 +23,7 @@
         .scale-full-container svg {
             width: 100%;
             height: auto;
-            max-width: 1050px; /* Spans landscape width */
+            max-width: 1050px;
             display: block;
             margin: 0 auto;
         }
@@ -54,57 +57,121 @@
             }
             .chord-card {
                 border: 1px solid #f5f5f5 !important;
-                padding: 15px 5px !important; /* Reduced X, Increased Y padding */
+                padding: 15px 5px !important;
                 margin: 0 !important;
             }
         }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen">
-    <div class="max-w-6xl mx-auto px-4 py-12 print-container">
-        <header class="text-center mb-12 no-print">
-            <h1 class="text-5xl font-extrabold tracking-tight text-slate-800 mb-4">ChordDumper Suite</h1>
-            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
-                Generate positional guitar theory workbooks. Enter a progression and choose your fretboard starting point.
-            </p>
+    <!-- Rate Limit Alert (Hidden by default) -->
+    <div id="rate-limit-alert" class="hidden fixed top-0 left-0 w-full bg-red-600 text-white p-4 text-center z-[9999] shadow-2xl animate-pulse">
+        <p class="font-black text-lg uppercase tracking-widest">⚠️ Rate Limit Detected (429 Error) ⚠️</p>
+        <p class="text-sm">Too many requests. Please wait a few seconds before trying again.</p>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-8 print-container">
+        <header class="text-center mb-8 no-print">
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-800 mb-2">ChordDumper Suite</h1>
+            <p class="text-slate-600">Music Theory Discovery Engine</p>
         </header>
 
-        <!-- Input Section -->
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 mb-12 max-w-3xl mx-auto no-print">
+        <!-- Discovery Panel -->
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 mb-8 no-print">
             <form 
                 hx-post="/generate" 
                 hx-target="#workbook-results" 
                 hx-indicator="#loading-spinner"
-                class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end"
+                class="space-y-6"
             >
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Chord Progression</label>
-                    <input 
-                        type="text" 
-                        name="progression" 
-                        value="C Am F G"
-                        placeholder="e.g., C Am F G"
-                        class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
-                    >
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Key Selection -->
+                    <div>
+                        <label class="block text-xs font-bold text-blue-500 uppercase mb-1 text-center italic">Step 1: Pick Note</label>
+                        <select 
+                            name="key_root" id="key_root" 
+                            class="w-full p-3 rounded-lg border-2 border-blue-100 bg-white font-black text-xl text-center appearance-none focus:border-blue-500 outline-none transition-all"
+                            hx-get="/get_preset_chords"
+                            hx-target="#progression-input"
+                            hx-trigger="change delay:300ms"
+                            hx-include="[name='scale_type'], [name='preset']"
+                            hx-on::after-request="if(event.detail.successful) document.getElementById('progression-input').value = event.detail.xhr.responseText"
+                        >
+                            {% for note in notes %}
+                                <option value="{{ note }}" {% if note == 'C' %}selected{% endif %}>{{ note }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Scale Type -->
+                    <div>
+                        <label class="block text-xs font-bold text-purple-500 uppercase mb-1 text-center italic">Step 2: Pick Mood</label>
+                        <select 
+                            name="scale_type" id="scale_type" 
+                            class="w-full p-3 rounded-lg border-2 border-purple-100 bg-white font-bold text-center appearance-none focus:border-purple-500 outline-none transition-all"
+                            hx-get="/get_preset_chords"
+                            hx-target="#progression-input"
+                            hx-trigger="change delay:300ms"
+                            hx-include="[name='key_root'], [name='preset']"
+                            hx-on::after-request="if(event.detail.successful) document.getElementById('progression-input').value = event.detail.xhr.responseText"
+                        >
+                            {% for s in scales %}
+                                <option value="{{ s }}">{{ scale_meta.get(s, s.capitalize()) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Presets -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 text-center italic">Step 3: Pick Pattern (Optional)</label>
+                        <select 
+                            name="preset" id="preset"
+                            class="w-full p-3 rounded-lg border-2 border-slate-100 bg-slate-50 text-slate-700 font-bold text-center appearance-none cursor-pointer focus:border-slate-400 outline-none transition-all"
+                            hx-get="/get_preset_chords"
+                            hx-target="#progression-input"
+                            hx-trigger="change delay:300ms"
+                            hx-vals='js:{key_root: document.getElementById("key_root").value, scale_type: document.getElementById("scale_type").value}'
+                            hx-on::after-request="if(event.detail.successful) document.getElementById('progression-input').value = event.detail.xhr.responseText"
+                        >
+                            <option value="">-- Manual / Custom Chords --</option>
+                            {% for key, p in presets.items() %}
+                                <option value="{{ key }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Start Fret</label>
-                    <input 
-                        type="number" 
-                        name="start_fret" 
-                        value="1" 
-                        min="1" 
-                        max="15"
-                        class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
-                    >
-                </div>
-                <div>
-                    <button 
-                        type="submit" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg shadow-blue-200 transition-all transform active:scale-95"
-                    >
-                        Generate
-                    </button>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <!-- Manual Progression -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Chord Progression (Space Separated)</label>
+                        <input 
+                            type="text" 
+                            name="progression" 
+                            id="progression-input"
+                            value="C Am F G"
+                            class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 text-center">Start Fret</label>
+                        <input 
+                            type="number" 
+                            name="start_fret" 
+                            value="1" 
+                            min="1" 
+                            max="15"
+                            class="w-full px-4 py-3 rounded-lg border border-slate-200 text-center font-bold"
+                        >
+                    </div>
+                    <div>
+                        <button 
+                            type="submit" 
+                            class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-lg shadow-lg transition-all transform active:scale-95"
+                        >
+                            Generate Sheet
+                        </button>
+                    </div>
                 </div>
             </form>
 
@@ -114,16 +181,31 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="text-sm font-medium">Analyzing theory...</span>
+                <span class="text-sm font-medium uppercase tracking-widest">Calculating Theory...</span>
             </div>
         </div>
 
         <!-- Results Display -->
         <div id="workbook-results" class="min-h-[400px]">
-            <div class="text-center py-20 text-slate-400">
-                <p class="italic">Your theory workbook will appear here.</p>
+            <div class="text-center py-20 text-slate-400 border-2 border-dashed border-slate-200 rounded-3xl">
+                <p class="italic">Pick a key and a preset to build your theory workbook.</p>
             </div>
         </div>
     </div>
+
+    <script>
+        // Global HTMX Error Handling for 429s
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            if (evt.detail.xhr.status === 429) {
+                const alertBox = document.getElementById('rate-limit-alert');
+                alertBox.classList.remove('hidden');
+                
+                // Automatically hide after 8 seconds
+                setTimeout(() => {
+                    alertBox.classList.add('hidden');
+                }, 8000);
+            }
+        });
+    </script>
 </body>
 </html>

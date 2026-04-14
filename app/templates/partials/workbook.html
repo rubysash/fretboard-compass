@@ -24,11 +24,32 @@
         {% endfor %}
     </div>
 
-    <!-- Row 3: Chords (Wrap logic for long progressions) -->
+    <!-- Row 3: Chords Grid -->
     <div class="chord-grid">
         {% for chord in workbook.chords %}
-        <div class="chord-card bg-white rounded-lg border border-slate-100">
-            <div class="chord-svg-container">{{ chord.svg | safe }}</div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 chord-card flex flex-col items-center">
+            <div class="text-center mb-2">
+                <h3 class="text-2xl font-black text-slate-800">{{ chord.name }}</h3>
+                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">{{ chord.nashville }}</span>
+            </div>
+            
+            <!-- Fingering Selector -->
+            <div class="w-full mb-3 no-print">
+                <select 
+                    class="w-full text-[10px] font-bold uppercase tracking-tighter p-1 bg-slate-50 border border-slate-200 rounded cursor-pointer"
+                    onchange="const container = this.closest('.chord-card').querySelector('.chord-svg-container'); 
+                              const selected = this.options[this.selectedIndex].dataset.svg;
+                              container.innerHTML = atob(selected);"
+                >
+                    {% for opt in chord.options %}
+                        <option value="{{ loop.index }}" data-svg="{{ opt.svg | b64encode }}">{{ opt.style }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="chord-svg-container w-full">
+                {{ chord.options[0].svg | safe }}
+            </div>
         </div>
         {% endfor %}
     </div>

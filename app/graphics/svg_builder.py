@@ -146,12 +146,17 @@ class FullNeckDiagram:
 
     def add_note(self, string: int, fret: int, label: str):
         if fret < 0 or fret > 12: return
-        # string 0 is Low E in our STRINGS array
+        # string 0 is Low E in our STRINGS array (H_STRINGS_Y[0] is 140)
         y = H_STRINGS_Y[string]
+        
+        # Calculate X position
         if fret == 0:
-            x = H_FRETS_X[0] - 15
-            self.dwg.add(self.dwg.circle(center=(x, y), r=6, fill='white', stroke='black', stroke_width=2))
+            # Place open notes just to the left of the Nut
+            x = H_FRETS_X[0] - 18
+            self.dwg.add(self.dwg.circle(center=(x, y), r=10, fill='white', stroke='black', stroke_width=2))
+            self.dwg.add(self.dwg.text(label, insert=(x, y+4), text_anchor="middle", font_size="10px", fill="black", font_weight="bold"))
         else:
+            # Place fretted notes in the middle of the fret space
             x = H_FRETS_X[fret-1] + (H_FRETS_X[fret] - H_FRETS_X[fret-1])/2
             self.dwg.add(self.dwg.circle(center=(x, y), r=12, fill='black'))
             self.dwg.add(self.dwg.text(label, insert=(x, y+4), text_anchor="middle", font_size="11px", fill="white", font_weight="bold", font_family="Arial"))
