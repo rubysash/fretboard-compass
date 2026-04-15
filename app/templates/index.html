@@ -73,14 +73,14 @@
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen">
     <!-- Rate Limit Alert (Hidden by default) -->
     <div id="rate-limit-alert" class="hidden fixed top-0 left-0 w-full bg-red-600 text-white p-4 text-center z-[9999] shadow-2xl animate-pulse">
-        <p class="font-black text-lg uppercase tracking-widest">⚠️ Rate Limit Detected (429 Error) ⚠️</p>
+        <p class="font-black text-lg uppercase tracking-widest">WARNING: Rate Limit Detected (429 Error) WARNING</p>
         <p class="text-sm">Too many requests. Please wait a few seconds before trying again.</p>
     </div>
 
     <div class="max-w-6xl mx-auto px-4 py-8 print-container">
         <header class="text-center mb-8 no-print">
             <h1 class="text-4xl font-extrabold tracking-tight text-slate-800 mb-2">Scale + Chord Progression</h1>
-            <p class="text-slate-600">Music Theory Helper for Guitarists</p>
+            <p class="text-slate-600">Music Theory Helper for Guitarists <span class="text-slate-400 ml-1">v{{ version }}</span></p>
         </header>
 
         <!-- Discovery Panel -->
@@ -230,6 +230,14 @@
                     >
                         Proven Winners
                     </button>
+                    <button 
+                        type="button"
+                        hx-get="/favorites" 
+                        hx-target="#workbook-results" 
+                        class="text-indigo-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest border-b border-dotted border-indigo-200 pb-0.5 transition-all"
+                    >
+                        Favorites
+                    </button>
                 </div>
             </form>
 
@@ -262,6 +270,17 @@
                 setTimeout(() => {
                     alertBox.classList.add('hidden');
                 }, 8000);
+            }
+        });
+
+        // Listen for Theory Updates from the Solver
+        document.body.addEventListener('updateTheory', function(evt) {
+            const theory = evt.detail;
+            if (theory.root) {
+                document.getElementById('key_root').value = theory.root;
+            }
+            if (theory.mood) {
+                document.getElementById('scale_type').value = theory.mood;
             }
         });
     </script>

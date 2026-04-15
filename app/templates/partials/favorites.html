@@ -1,0 +1,66 @@
+<div class="bg-white rounded-3xl p-8 border-2 border-indigo-100 shadow-2xl animate-in zoom-in duration-300">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-3xl font-black tracking-tighter text-indigo-900">Your Saved Favorites</h2>
+            <p class="text-slate-500 text-sm">Pick a custom vibe to load it into the engine.</p>
+        </div>
+        <button 
+            hx-get="/instructions" 
+            hx-target="#workbook-results"
+            class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full font-bold text-xs hover:bg-indigo-100 transition-all"
+        >
+            Back to Guide
+        </button>
+    </div>
+
+    {% if not favorites %}
+    <div class="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
+        <p class="text-slate-400 font-bold italic">No favorites saved yet!</p>
+        <p class="text-slate-400 text-xs">Generate a sheet and click the star to save one.</p>
+    </div>
+    {% else %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for fav in favorites %}
+        <div class="group relative bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:bg-white hover:border-indigo-400 hover:shadow-xl transition-all cursor-pointer">
+            <!-- Delete Button -->
+            <button 
+                hx-delete="/favorites/delete/{{ fav.id }}"
+                hx-target="#workbook-results"
+                hx-confirm="Delete this favorite?"
+                class="absolute -top-2 -right-2 bg-red-100 text-red-600 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-600 hover:text-white"
+            >
+                &times;
+            </button>
+
+            <div 
+                class="space-y-2"
+                onclick="
+                    document.getElementById('key_root').value = '{{ fav.key_root }}';
+                    document.getElementById('scale_type').value = '{{ fav.scale_type }}';
+                    document.getElementById('progression-input').value = '{{ fav.progression }}';
+                    document.querySelector('input[name=\'start_fret\']').value = '{{ fav.start_fret }}';
+                    document.getElementById('preset').value = ''; // Set to manual
+                    
+                    // Small delay to ensure inputs are populated before HTMX submits
+                    setTimeout(() => {
+                        document.getElementById('theory-form').requestSubmit();
+                    }, 100);
+                "
+            >
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-bold text-indigo-400">Star</span>
+                    <h3 class="font-black text-indigo-900 truncate">{{ fav.name }}</h3>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                    <span class="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded-full uppercase">{{ fav.key_root }} {{ fav.scale_type }}</span>
+                </div>
+                {% if fav.description %}
+                <p class="text-[10px] text-slate-500 italic leading-snug line-clamp-3 bg-indigo-50/50 p-1 rounded border border-indigo-100/50">{{ fav.description }}</p>
+                {% endif %}
+                <p class="text-[10px] font-bold text-slate-400 truncate">{{ fav.progression }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>

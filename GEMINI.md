@@ -11,22 +11,50 @@ Fretboard Compass is a high-performance Music Theory Suite for guitarists. It tr
 - **Interactive Library:**
     - **Proven Winners:** A dashboard of 20 timeless chord/scale combinations with play-style tips and sample songs.
     - **Pattern Presets:** 22 standard and advanced progressions synced with professional theory benchmarks.
+- **Favorites System:** Save custom combinations with a Title and Description (e.g. "distortion settings", "fingerpicking style"). Persistent JSON storage for custom vibes.
+- **Solver Sync:** Entering a manual progression automatically updates the "Note" and "Mood" dropdowns to match the detected theory.
 - **Student Ready:** Built-in "One Neighborhood" practice guide and printable drill sheets.
 
 ## Technical Stack
+- **Version:** v0.1.2
 - **Backend:** Flask (Python 3.12+)
 - **Frontend:** HTMX (AJAX without JS), Tailwind CSS (Modern Styling)
-- **Graphics:** `svgwrite` (Dynamic vector generation)
+- **Graphics:** svgwrite (Dynamic vector generation)
 - **Infrastructure:** Local development ready; Cloudflare Workers (Edge) roadmap.
 
+## Documentation Standards
+- **Emoji Usage:** NEVER use emojis in any output documentation (README.md, GEMINI.md, etc.) except for the README.md which has a sign of the horns (🤘) after the last line "...for guitarists ..."
+- application code may use specific music symbols if they are standard and best practice, but not emojies for general header/comment text output, which should always appear as professional output.
+- applicaiton code should prefer svg icons from free font awesome resources if needed (the star for favorites), and should avoid smart quotes, em dashes, and other use of emojies not already specified.
+
+## Version Log
+### v0.1.2
+- **Fixed Favorites Saving:** Wrapped the Save Favorite form in a proper form element to ensure custom titles and descriptions are correctly captured and persisted alongside the theory data.
+- **Improved Visuals:** Enhanced the readability of the Favorite cards by adjusting the description font size and leading.
+
+### v0.1.1
+- **Solver Sync:** Entering a manual progression now automatically updates the "Note" and "Mood" dropdowns to match the detected theory.
+- **Enhanced Favorites:** Added support for custom Titles and Descriptions when saving favorites.
+- **Interactive UI:** The Star button now opens an inline form for better context.
+
+### v0.1.0
+- Initial professional release of **Fretboard Compass**.
+- Implemented **Proven Winners** and **Favorites** systems.
+- Added **Positional Zoning** and **Diamond Roots** to SVG engine.
+- Integrated **HTMX** for seamless UI updates.
+- Established **Binder-Ready** 8.5x11 printing layout.
+
 ## Project Architecture
-- `app/theory/engine.py`: The "Brain". Mathematical interval and triad calculation.
-- `app/theory/solver.py`: The "Navigator". Finds optimal fingerings and movable CAGED shapes.
-- `app/graphics/svg_builder.py`: The "Artist". Handles all vector rendering and positional color zoning.
-- `app/templates/`: Pure HTML/HTMX partials for ultra-fast UI swaps.
+- app/theory/engine.py: The "Brain". Mathematical interval and triad calculation.
+- app/theory/solver.py: The "Navigator". Finds optimal fingerings and movable CAGED shapes.
+- app/graphics/svg_builder.py: The "Artist". Handles all vector rendering and positional color zoning.
+- app/templates/: Pure HTML/HTMX partials for ultra-fast UI swaps.
+- favorites/: Local JSON storage for user favorites.
 
 ## Strategic Roadmap
-- [x] **Phase 1:** Refactor to robust `TheoryEngine` with analytical triad building.
-- [x] **Phase 2:** Implement HTMX-powered "Proven Winners" and "Practice Guide".
-- [ ] **Phase 3:** Port Python logic to TypeScript for Cloudflare Workers deployment.
-- [ ] **Phase 4:** Integrate Stripe/Newsletter gatekeeping for commercial launch.
+- [x] Full CAGED movable voicing support.
+- [x] Mathematical triad building for exotic scales.
+- [x] "Proven Winners" interactive dashboard.
+- [x] Favorites system with Titles and Descriptions.
+- [ ] TypeScript port for Cloudflare Workers deployment.
+- [ ] Stripe integration for "Pro" tier features.

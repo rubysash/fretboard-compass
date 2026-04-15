@@ -123,6 +123,7 @@ env.bak/
 venv.bak/
 
 # Project Specific (from .geminiignore and local structure)
+favorites/
 Include/
 Lib/
 Scripts/

@@ -3,15 +3,37 @@
     <div class="flex justify-between items-center mb-2">
         <div class="flex flex-col">
             <h2 class="text-2xl font-black tracking-tighter">
-                {% for chord in workbook.chords %}{{ chord.name }}{% if not loop.last %} — {% endif %}{% endfor %}
+                {% for chord in workbook.chords %}{{ chord.name }}{% if not loop.last %} -- {% endif %}{% endfor %}
             </h2>
             <div class="text-xs font-bold text-slate-500">
                 Key: {{ workbook.inferred_theory.root }} {{ workbook.inferred_theory.mood }}{% if workbook.inferred_theory.is_detected %} (Auto){% endif %}
             </div>
         </div>
-        <button onclick="window.print()" class="no-print bg-slate-900 text-white px-4 py-2 rounded-full font-bold text-xs transition-all flex items-center gap-2">
-            Print
-        </button>
+        <div class="flex items-center gap-4 no-print">
+            <!-- Save to Favorites -->
+            <div id="fav-save-area" class="flex items-center gap-1">
+                <button 
+                    hx-get="/favorites/form" 
+                    hx-target="#fav-save-area"
+                    hx-swap="outerHTML"
+                    hx-vals='js:{key_root: document.getElementById("key_root").value, scale_type: document.getElementById("scale_type").value}'
+                    class="text-yellow-400 hover:text-yellow-500 text-2xl transition-all transform active:scale-125"
+                    title="Save to Favorites"
+                >
+                    Star
+                </button>
+                <div class="group relative">
+                    <span class="text-slate-300 cursor-help text-[10px] border border-slate-200 rounded-full px-1">?</span>
+                    <div class="hidden group-hover:block absolute z-50 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl right-0 bottom-full mb-2">
+                        This will add to your favorites list.
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="window.print()" class="bg-slate-900 text-white px-4 py-2 rounded-full font-bold text-xs transition-all flex items-center gap-2">
+                Print
+            </button>
+        </div>
     </div>
 
     <!-- Row 2: Full Scale (Horizontal) -->

@@ -7,6 +7,7 @@ from pathlib import Path
 
 class Config:
     """Base configuration."""
+    VERSION = "0.1.2"
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-for-local-use')
     DEBUG = True
     APP_DIR = Path(__file__).parent

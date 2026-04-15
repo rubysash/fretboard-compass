@@ -253,16 +253,16 @@ def get_nashville_number(key_root: str, key_type: str, chord_name: str) -> str:
     
     # 4. Determine Casing based on Chord Quality
     is_minor = 'm' in suffix and 'maj' not in suffix
-    is_dim = 'dim' in suffix or '°' in suffix
+    is_dim = 'dim' in suffix or 'o' in suffix
     is_aug = 'aug' in suffix or '+' in suffix
     
     final_roman = roman.lower() if is_minor or is_dim else roman
     
     # 5. Add quality markers
     quality = ""
-    if is_dim: quality = "°"
+    if is_dim: quality = "dim"
     elif is_aug: quality = "+"
-    elif '7' in suffix: quality = "⁷"
+    elif '7' in suffix: quality = "7"
     elif 'sus' in suffix: quality = suffix # keep sus2/sus4 literal
     
     return f"{acc}{final_roman}{quality}"
